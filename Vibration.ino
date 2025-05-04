@@ -1,0 +1,51 @@
+// Pin setup
+#define VIBRATION_PIN 3     // SW-520D "DO" connected to pin 3
+#define BUZZER_PIN 26       // Buzzer connected to pin 26
+
+// Variables
+int vibrationCount = 0;
+unsigned long lastCheckTime = 0;
+const int VIBRATION_THRESHOLD = 100;  // New threshold value
+
+void setup() {
+  pinMode(VIBRATION_PIN, INPUT_PULLUP); // Use internal pull-up for sensor
+  pinMode(BUZZER_PIN, OUTPUT);         // Buzzer output
+  Serial.begin(115200);                // For debugging
+}
+
+void loop() {
+  int sensorValue = digitalRead(VIBRATION_PIN);
+  
+  if (sensorValue == LOW) {
+    vibrationCount++;
+    delay(10); // debounce delay to avoid multiple counts from single shake
+  }
+
+  // Every 1 second, check vibrations
+  if (millis() - lastCheckTime > 1000) {
+    Serial.print("Vibration count: ");
+    Serial.println(vibrationCount);
+
+    if (vibrationCount > VIBRATION_THRESHOLD) {  // Changed to use threshold
+      alarmBeep();              // Loud beep pattern
+      Serial.println("BUZZER ALARM - Vibration threshold exceeded!");
+    } else {
+      noTone(BUZZER_PIN);        // Turn buzzer OFF
+      Serial.println("BUZZER OFF - Normal vibration level");
+    }
+
+    vibrationCount = 0;           // Reset counter for next 1 sec
+    lastCheckTime = millis();     // Update last check time
+  }
+}
+
+// Buzzer loud beep pattern
+void alarmBeep() {
+  // Play multiple beeps
+  for (int i = 0; i < 3; i++) {       // Beep 3 times
+    tone(BUZZER_PIN, 2000);            // 2000Hz tone
+    delay(200);                        // ON for 200ms
+    noTone(BUZZER_PIN);                // Turn off
+    delay(200);                        // Pause for 200ms
+  }
+}
