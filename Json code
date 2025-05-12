@@ -1,0 +1,36 @@
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const data = JSON.parse(e.postData.contents);
+    
+    const timestamp = new Date();
+    const row = [
+      timestamp,
+      data.temperature || null,
+      data.vibration || null,
+      data.latitude || null,
+      data.longitude || null,
+      data.geofence_breach ? "BREACH" : "SAFE",
+      data.device_id || "unknown"
+    ];
+    
+    sheet.appendRow(row);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      data: row
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet() {
+  return ContentService.createTextOutput(
+    "POST requests only. Send JSON data to this endpoint."
+  ).setMimeType(ContentService.MimeType.TEXT);
+}
